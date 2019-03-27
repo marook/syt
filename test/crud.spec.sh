@@ -44,3 +44,11 @@ step 'push world.txt to remote'
 
 step 'status remote'
 ( cd 'repo' && ${syt} status )
+
+step 'pull remote'
+echo 'something else' > 'remote/pull.txt'
+( cd 'remote' && ${syt} add 'pull.txt' )
+( cd 'repo' && ${syt} pull '../remote' 'pull.txt' )
+
+step 'status'
+( cd 'repo' && ${syt} status )

@@ -61,11 +61,24 @@ class Repository(object):
         return '{}:{}'.format(node_name, os.path.abspath(self.repo_root))
 
     def find_tracked_file(self, path):
-        abs_path = os.path.abspath(path)
+        abs_path = self.resolve_tracked_path(path)
         if not abs_path.startswith(os.path.abspath(self.repo_root)):
-            raise FileNotInRepository()
+            raise FileNotInRepository('{} not in repository {}'.format(path, self.repo_root))
         repo_path = abs_path[len(self.repo_root)+1:]
         return self.get_tracked_file(repo_path)
+
+    def resolve_tracked_path(self, path):
+        for p in self.tracked_path_resolutions(path):
+            if os.path.exists(p):
+                return os.path.abspath(p)
+        raise FileNotInRepository('{} not found in repository'.format(path))
+
+    def tracked_path_resolutions(self, path):
+        if os.path.isabs(path):
+            yield path
+            return
+        yield os.path.join(self.repo_root, path)
+        yield os.path.abspath(path)
 
     def get_tracked_file(self, repo_path):
         with self._connect() as con:

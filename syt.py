@@ -5,6 +5,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'lib'))
 
 import cmd_add
 import cmd_init
+import cmd_pull
 import cmd_push
 import cmd_status
 
@@ -13,6 +14,7 @@ commands = {
     'status': cmd_status,
     'add': cmd_add,
     'push': cmd_push,
+    'pull': cmd_pull,
 }
 
 def main(argv):
