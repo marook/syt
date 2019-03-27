@@ -3,7 +3,7 @@ import repository
 
 def run(argv):
     args = parse_args(argv)
-    rpm = repository.find_repo_meta()
+    rpm = repository.find_repository()
     for f in args.file:
         wd_file = repository.get_file(f)
         rpm.add_file(wd_file)

@@ -5,19 +5,19 @@ import time
 
 repo_meta_dir = '.syt'
 
-def find_repo_meta(dir=os.getcwd()):
+def find_repository(dir=os.getcwd()):
     meta_dir = os.path.join(dir, repo_meta_dir)
     if os.path.exists(meta_dir):
-        return RepoMeta(dir)
+        return Repository(dir)
     parent_dir = os.path.dirname(dir)
     if(parent_dir == dir):
-        raise RepoNotFound()
-    return find_repo_meta(parent_dir)
+        raise RepositoryNotFound()
+    return find_repository(parent_dir)
 
-class RepoNotFound(Exception):
+class RepositoryNotFound(Exception):
     pass
 
-class RepoMeta(object):
+class Repository(object):
     def __init__(self, repo_root):
         self.repo_root = repo_root
 
@@ -28,7 +28,7 @@ class RepoMeta(object):
             cur.execute('create table tracked_files (path text primary key not null, content_hash text not null, added_ts integer not null, removed_ts integer)')
 
     def _connect(self):
-        return RepoDb(os.path.join(self.meta_dir, 'db.sqlite'))
+        return RepositoryDb(os.path.join(self.meta_dir, 'db.sqlite'))
 
     @property
     def meta_dir(self):
@@ -40,21 +40,21 @@ class RepoMeta(object):
             cur = con.cursor()
             cur.execute('select path, content_hash from tracked_files where removed_ts is null')
             for repo_path, content_hash in cur.fetchall():
-                yield RepoFile(repo_path, content_hash)
+                yield TrackedFile(repo_path, content_hash)
 
     def add_file(self, wd_file):
         now = current_time_milliseconds()
         content_hash = wd_file.content_hash()
         with self._connect() as con:
             cur = con.cursor()
-            cur.execute('insert into tracked_files (path, content_hash, added_ts) values (?, ?, ?)', (wd_file.get_repo_path(self), content_hash, now))
+            cur.execute('insert into tracked_files (path, content_hash, added_ts) values (?, ?, ?)', (wd_file.get_repository_path(self), content_hash, now))
             con.commit()
 
 def current_time_milliseconds():
     # taken from https://stackoverflow.com/a/5998359/404522
     return int(round(time.time() * 1000))
 
-class RepoDb(object):
+class RepositoryDb(object):
     def __init__(self, db_path):
         self.db_path = db_path
         self.connection = None
@@ -68,7 +68,7 @@ class RepoDb(object):
             self.connection.close()
             self.connection = None
 
-class RepoFile(object):
+class TrackedFile(object):
     def __init__(self, repo_path, content_hash):
         self.repo_path = repo_path
         self.content_hash = content_hash
@@ -76,7 +76,7 @@ class RepoFile(object):
 def find_files(path):
     for root, dirs, files in os.walk(path):
         if root == path:
-            dirs.remove('.syt')
+            dirs.remove(repo_meta_dir)
         for f in files:
             yield get_file(os.path.join(root, f))
 
@@ -88,11 +88,11 @@ class WdFile(object):
     def __init__(self, path):
         self.path = path
 
-    def get_repo_path(self, rpm):
-        '''get_repo_path returns the path of the file within the repo.'''
+    def get_repository_path(self, rpm):
+        '''get_repository_path returns the path of the file within the repository.'''
         repo_root = rpm.repo_root
         if not self.path.startswith(repo_root):
-            raise FileNotInRepo()
+            raise FileNotInRepository()
         return self.path[len(repo_root)+1:]
 
     def content_hash(self):
@@ -105,5 +105,5 @@ class WdFile(object):
                 h.update(chunk)
         return h.hexdigest()
 
-class FileNotInRepo(Exception):
+class FileNotInRepository(Exception):
     pass

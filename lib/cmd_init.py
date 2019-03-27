@@ -3,7 +3,7 @@ import repository
 
 def run(argv):
     args = parse_args(argv)
-    rpm = repository.RepoMeta(args.path[0])
+    rpm = repository.Repository(args.path[0])
     rpm.init()
 
 def parse_args(argv):
