@@ -53,4 +53,5 @@ $ syt pull /path/to/remote/repo
 -----------------------------------------------------------------------
 License
 
-See the file LICENSE.
+syt is licensed under the AGPL license. For more details see the
+LICENSE file.
