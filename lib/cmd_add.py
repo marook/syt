@@ -1,12 +1,11 @@
 import argparse
-import repo_meta
-import wd_meta
+import repository
 
 def run(argv):
     args = parse_args(argv)
-    rpm = repo_meta.find_repo_meta()
+    rpm = repository.find_repo_meta()
     for f in args.file:
-        wd_file = wd_meta.get_file(f)
+        wd_file = repository.get_file(f)
         rpm.add_file(wd_file)
 
 def parse_args(argv):
