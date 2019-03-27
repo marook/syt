@@ -7,3 +7,4 @@
 * add setup script for installation
 -----
 * rm command for removing files
+* add windows support by always using / in repository db paths
