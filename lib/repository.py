@@ -1,5 +1,6 @@
 import hashlib
 import os
+import platform
 import sqlite3
 import time
 
@@ -49,6 +50,11 @@ class Repository(object):
             cur = con.cursor()
             cur.execute('insert into tracked_files (path, content_hash, added_ts) values (?, ?, ?)', (wd_file.get_repository_path(self), content_hash, now))
             con.commit()
+
+    @property
+    def name(self):
+        node_name = platform.node()
+        return '{}:{}'.format(node_name, os.path.abspath(self.repo_root))
 
 def current_time_milliseconds():
     # taken from https://stackoverflow.com/a/5998359/404522
