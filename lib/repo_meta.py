@@ -1,0 +1,73 @@
+import os
+import sqlite3
+import time
+
+repo_meta_dir = '.syt'
+
+def find_repo_meta(dir=os.getcwd()):
+    meta_dir = os.path.join(dir, repo_meta_dir)
+    if os.path.exists(meta_dir):
+        return RepoMeta(dir)
+    parent_dir = os.path.dirname(dir)
+    if(parent_dir == dir):
+        raise RepoNotFound()
+    return find_repo_meta(parent_dir)
+
+class RepoNotFound(Exception):
+    pass
+
+class RepoMeta(object):
+    def __init__(self, repo_root):
+        self.repo_root = repo_root
+
+    def init(self):
+        os.mkdir(self.meta_dir)
+        with self._connect() as con:
+            cur = con.cursor()
+            cur.execute('create table tracked_files (path text primary key not null, content_hash text not null, added_ts integer not null, removed_ts integer)')
+
+    def _connect(self):
+        return RepoDb(os.path.join(self.meta_dir, 'db.sqlite'))
+
+    @property
+    def meta_dir(self):
+        return os.path.join(self.repo_root, repo_meta_dir)
+
+    @property
+    def added_files(self):
+        with self._connect() as con:
+            cur = con.cursor()
+            cur.execute('select path, content_hash from tracked_files where removed_ts is null')
+            for repo_path, content_hash in cur.fetchall():
+                yield RepoFile(repo_path, content_hash)
+
+    def add_file(self, wd_file):
+        now = current_time_milliseconds()
+        content_hash = wd_file.content_hash()
+        with self._connect() as con:
+            cur = con.cursor()
+            cur.execute('insert into tracked_files (path, content_hash, added_ts) values (?, ?, ?)', (wd_file.get_repo_path(self), content_hash, now))
+            con.commit()
+
+def current_time_milliseconds():
+    # taken from https://stackoverflow.com/a/5998359/404522
+    return int(round(time.time() * 1000))
+
+class RepoDb(object):
+    def __init__(self, db_path):
+        self.db_path = db_path
+        self.connection = None
+
+    def __enter__(self):
+        self.connection = sqlite3.connect(self.db_path)
+        return self.connection
+    
+    def __exit__(self, *args, **kwargs):
+        if not self.connection is None:
+            self.connection.close()
+            self.connection = None
+
+class RepoFile(object):
+    def __init__(self, repo_path, content_hash):
+        self.repo_path = repo_path
+        self.content_hash = content_hash

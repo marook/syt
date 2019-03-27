@@ -1,0 +1,10 @@
+* add repo name to status command
+* push file to remote repo
+* pull file from remote repo
+* push index to remote repo
+* pull index from remote repo
+* pull remote repo
+* push to remote repo with size limit
+* add setup script for installation
+-----
+* rm command for removing files
