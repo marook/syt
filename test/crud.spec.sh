@@ -45,7 +45,7 @@ step 'push world.txt to remote'
 step 'status remote'
 ( cd 'repo' && ${syt} status )
 
-step 'pull remote'
+step 'pull pull.txt from remote'
 echo 'something else' > 'remote/pull.txt'
 ( cd 'remote' && ${syt} add 'pull.txt' )
 ( cd 'repo' && ${syt} pull '../remote' 'pull.txt' )
@@ -58,3 +58,8 @@ step 'push index'
 
 step 'pull index'
 ( cd 'repo' && ${syt} pull_index '../remote' )
+
+step 'pull everything from remote'
+echo 'something new' > 'remote/pull_all.txt'
+( cd 'remote' && ${syt} add 'pull_all.txt' )
+( cd 'repo' && ${syt} pull '../remote' )
