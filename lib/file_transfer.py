@@ -1,4 +1,4 @@
-import os.path
+import os
 import repository
 import shutil
 
@@ -15,6 +15,7 @@ def transfer(src_repo, dst_repo, src_file_paths):
                 raise ContentHashMissmatch('{} exists but content hash missmatch! Source {}. Destination {}.'.format(src_file.repo_path, src_file.content_hash, dst_file.content_hash))
         print('Transfering {}...'.format(src_file.repo_path))
         dst_file_path = os.path.join(dst_repo.repo_root, src_file.repo_path)
+        os.makedirs(os.path.dirname(dst_file_path), exist_ok=True)
         shutil.copyfile(src_file.path, dst_file_path)
         dst_repo.add_file(repository.get_file(dst_file_path), src_file.content_hash)
 

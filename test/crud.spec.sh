@@ -63,3 +63,9 @@ step 'pull everything from remote'
 echo 'something new' > 'remote/pull_all.txt'
 ( cd 'remote' && ${syt} add 'pull_all.txt' )
 ( cd 'repo' && ${syt} pull '../remote' )
+
+step 'add and pull file in subdirectory'
+mkdir 'remote/subdir'
+echo 'hello world' > 'remote/subdir/peng.txt'
+( cd 'remote' && ${syt} add 'subdir/peng.txt' )
+( cd 'repo' && ${syt} pull '../remote' )
