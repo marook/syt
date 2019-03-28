@@ -7,6 +7,7 @@ import cmd_add
 import cmd_init
 import cmd_pull
 import cmd_push
+import cmd_push_index
 import cmd_status
 
 commands = {
@@ -14,6 +15,7 @@ commands = {
     'status': cmd_status,
     'add': cmd_add,
     'push': cmd_push,
+    'push_index': cmd_push_index,
     'pull': cmd_pull,
 }
 
