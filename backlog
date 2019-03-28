@@ -1,5 +1,3 @@
-* push index to remote repo
-* pull index from remote repo
 * pull remote repo
 * push to remote repo with size limit
 * add setup script for installation

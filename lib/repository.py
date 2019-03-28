@@ -5,6 +5,7 @@ import sqlite3
 import time
 
 repo_meta_dir = '.syt'
+index_db_file_name = 'index.sqlite'
 
 def find_repository(dir=os.getcwd()):
     meta_dir = os.path.join(dir, repo_meta_dir)
@@ -33,11 +34,15 @@ class Repository(object):
             cur.execute('create table tracked_files (path text primary key not null, content_hash text not null, added_ts integer not null, removed_ts integer)')
 
     def _connect(self):
-        return RepositoryDb(os.path.join(self.meta_dir, 'db.sqlite'))
+        return RepositoryDb(self.index_path)
 
     @property
     def meta_dir(self):
         return os.path.join(self.repo_root, repo_meta_dir)
+
+    @property
+    def index_path(self):
+        return os.path.join(self.meta_dir, index_db_file_name)
 
     @property
     def added_files(self):
@@ -57,6 +62,13 @@ class Repository(object):
 
     @property
     def name(self):
+        '''name contains the name of the repository.
+
+        A name contains a host identifier and a repository identifier
+        which are separated by a colon. For example
+        pc123:/path/to/repo. The repository identifier can but also may
+        not be a path to the repository.
+        '''
         node_name = platform.node()
         return '{}:{}'.format(node_name, os.path.abspath(self.repo_root))
 
@@ -89,6 +101,11 @@ class Repository(object):
                 return None
             (content_hash,) = row
             return TrackedFile(self, repo_path, content_hash)
+
+    def get_remote_index_path(self, repo_name):
+        repo_host, repo_identifier = repo_name.split(':')
+        paths = [self.meta_dir, 'indices', repo_host] + repo_identifier.split('/') + [index_db_file_name,]
+        return os.path.join(*paths)
 
 def current_time_milliseconds():
     # taken from https://stackoverflow.com/a/5998359/404522

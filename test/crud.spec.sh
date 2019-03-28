@@ -52,3 +52,9 @@ echo 'something else' > 'remote/pull.txt'
 
 step 'status'
 ( cd 'repo' && ${syt} status )
+
+step 'push index'
+( cd 'repo' && ${syt} push_index '../remote' )
+
+step 'pull index'
+( cd 'repo' && ${syt} pull_index '../remote' )
