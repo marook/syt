@@ -107,6 +107,13 @@ class Repository(object):
         paths = [self.meta_dir, 'indices', repo_host] + repo_identifier.split('/') + [index_db_file_name,]
         return os.path.join(*paths)
 
+    @property
+    def file_content_size(self):
+        size = 0
+        for f in self.added_files:
+            size += f.size
+        return size
+
 def current_time_milliseconds():
     # taken from https://stackoverflow.com/a/5998359/404522
     return int(round(time.time() * 1000))
@@ -134,6 +141,10 @@ class TrackedFile(object):
     @property
     def path(self):
         return os.path.join(self.repo.repo_root, self.repo_path)
+
+    @property
+    def size(self):
+        return os.stat(self.path).st_size
 
 def find_files(path):
     for root, dirs, files in os.walk(path):
@@ -166,6 +177,10 @@ class WdFile(object):
                     break
                 h.update(chunk)
         return h.hexdigest()
+
+    @property
+    def size(self):
+        return os.stat(self.path).st_size
 
 class FileNotInRepository(Exception):
     pass

@@ -4,7 +4,8 @@ syt - synchronize things
 2) Installation
 3) Creating a local repository
 4) Synchronize with a remote repository
-5) License
+5) Testing
+6) License
 
 
 -----------------------------------------------------------------------
@@ -48,6 +49,13 @@ $ syt push /path/to/remote/repo my/file.webm
 
 Pull files from a remote repository:
 $ syt pull /path/to/remote/repo
+
+
+-----------------------------------------------------------------------
+Testing
+
+Run the tests:
+$ python3 -m unittest discover lib '*_spec.py'
 
 
 -----------------------------------------------------------------------
