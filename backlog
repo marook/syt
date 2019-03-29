@@ -4,6 +4,7 @@
 * add a version to the index for future migrations
 -----
 * rm command for removing files
+* add on directory should add all files recursive
 * add help message when calling syt without command and -h flag
 * add a generation value which is incremented with each change
 * prevent overwriting pushed index when generation is higher
