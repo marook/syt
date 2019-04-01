@@ -1,4 +1,5 @@
 * rm command for removing files
+* add rm purge option to remove file and db entry
 * add on directory should add all files recursive
 * add help message when calling syt without command and -h flag
 * add a generation value which is incremented with each change
