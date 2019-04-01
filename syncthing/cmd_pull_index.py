@@ -1,6 +1,6 @@
 import argparse
-import index_transfer
-import repository
+import syncthing.index_transfer as index_transfer
+import syncthing.repository as repository
 
 def run(argv):
     args = parse_args(argv)

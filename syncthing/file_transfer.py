@@ -1,5 +1,5 @@
 import os
-import repository
+import syncthing.repository as repository
 import shutil
 
 def passthrough(*args, **kwargs):

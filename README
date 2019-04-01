@@ -19,7 +19,11 @@ syt tries to be useful if you want the following:
 -----------------------------------------------------------------------
 Installation
 
-TODO writing an installer is part of the backlog
+Install the dependencies:
+$ apt install python-pysqlite2
+
+Run within this directory:
+$ pip3 install .
 
 
 -----------------------------------------------------------------------
@@ -56,6 +60,10 @@ Testing
 
 Run the tests:
 $ python3 -m unittest discover lib '*_spec.py'
+
+Run an integration test:
+$ cd test
+$ ./crud.spec.sh
 
 
 -----------------------------------------------------------------------

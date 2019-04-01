@@ -1,4 +1,4 @@
-import humansize
+import syncthing.humansize as humansize
 import unittest
 
 class FormatSizeSpec(unittest.TestCase):

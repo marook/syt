@@ -1,7 +1,7 @@
 import argparse
-import file_transfer
-import humansize
-import repository
+import syncthing.file_transfer as file_transfer
+import syncthing.humansize as humansize
+import syncthing.repository as repository
 
 def run(argv):
     args = parse_args(argv)

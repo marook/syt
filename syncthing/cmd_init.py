@@ -1,5 +1,5 @@
 import argparse
-import repository
+import syncthing.repository as repository
 
 def run(argv):
     args = parse_args(argv)
