@@ -5,7 +5,7 @@ import repository
 def run(argv):
     args = parse_args(argv)
     repo = repository.find_repository()
-    added_files = dict([(f.repo_path, f) for f in repo.added_files])
+    added_files = dict([(f.repo_path, f) for f in repo.index.added_files])
     print(repo.name)
     if args.contentSize:
         print('content size: {}'.format(humansize.format_size(repo.file_content_size)))

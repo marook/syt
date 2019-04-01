@@ -3,10 +3,10 @@ import repository
 
 def run(argv):
     args = parse_args(argv)
-    rpm = repository.find_repository()
+    repo = repository.find_repository()
     for f in args.file:
         wd_file = repository.get_file(f)
-        rpm.add_file(wd_file)
+        repo.index.add_file(wd_file)
 
 def parse_args(argv):
     p = argparse.ArgumentParser(prog='syt add', description='Adds files to the repo')

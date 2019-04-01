@@ -15,14 +15,13 @@ fail(){
 }
 
 step 'Cleanup'
-if [[ -e 'repo' ]]
-then
-    rm -rf 'repo'
-fi
-if [[ -e 'remote' ]]
-then
-    rm -rf 'remote'
-fi
+for repo in repo remote transfer
+do
+    if [[ -e "${repo}" ]]
+    then
+        rm -rf -- "${repo}"
+    fi
+done
 
 alias
 
@@ -83,3 +82,9 @@ if [[ -e 'remote/neu.txt' ]]
 then
     fail "neu.txt should not have been pushed because of content limit"
 fi
+
+step 'push with exclude repo content'
+( cd 'repo' && ${syt} pull_index '../remote' )
+mkdir 'transfer'
+${syt} init 'transfer'
+( cd 'repo' && ${syt} push '../transfer' --exclude-repo-content `realpath '../remote'` )
