@@ -111,6 +111,7 @@ class RepositoryIndex(object):
     def init(self):
         with self._connect() as con:
             cur = con.cursor()
+            cur.execute('create table schema_history (migration text primary key not null)')
             cur.execute('create table tracked_files (path text primary key not null, content_hash text not null, added_ts integer not null, removed_ts integer)')
 
     @property
