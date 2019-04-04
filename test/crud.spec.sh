@@ -88,3 +88,6 @@ step 'push with exclude repo content'
 mkdir 'transfer'
 ${syt} init 'transfer'
 ( cd 'repo' && ${syt} push '../transfer' --exclude-repo-content `realpath '../remote'` )
+
+step 'pull index by name'
+( cd 'transfer' && ${syt} pull_index '../repo' `realpath '../remote'` )
