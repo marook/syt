@@ -1,8 +1,15 @@
 * rm command for removing files
-* add rm purge option to remove file and db entry
+* delete files with a removed_ts set on push and pull
+* write all tracked_files with a removed_ts set to destination index on
+  push and pull
+* status command should not list added files which exist
 * add on directory should add all files recursive
 * add help message when calling syt without command and -h flag
-* add a generation value which is incremented with each change
-* prevent overwriting pushed index when generation is higher
 ----- v0.2.0 release
 * add windows support by always using / in repository db paths
+* verify command which checks if index content hash and actual files
+  match
+* add rm purge option to remove file and db entry
+* add a generation value which is incremented with each change
+* prevent overwriting pushed index when generation is higher
+----- v0.3.0 release
