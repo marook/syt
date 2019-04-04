@@ -91,3 +91,10 @@ ${syt} init 'transfer'
 
 step 'pull index by name'
 ( cd 'transfer' && ${syt} pull_index '../repo' `realpath '../remote'` )
+
+step 'rm file'
+( cd 'repo' && ${syt} rm 'world.txt' )
+if [[ -e 'repo/world.txt' ]]
+then
+    fail 'world.txt should no longer exist'
+fi

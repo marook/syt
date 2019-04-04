@@ -1,4 +1,3 @@
-* rm command for removing files
 * delete files with a removed_ts set on push and pull
 * write all tracked_files with a removed_ts set to destination index on
   push and pull

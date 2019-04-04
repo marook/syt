@@ -1,10 +1,4 @@
-import syncthing.cmd_add as cmd_add
-import syncthing.cmd_init as cmd_init
-import syncthing.cmd_pull as cmd_pull
-import syncthing.cmd_pull_index as cmd_pull_index
-import syncthing.cmd_push as cmd_push
-import syncthing.cmd_push_index as cmd_push_index
-import syncthing.cmd_status as cmd_status
+from syncthing import cmd_add, cmd_init, cmd_pull, cmd_pull_index, cmd_push, cmd_push_index, cmd_rm, cmd_status
 import sys
 
 commands = {
@@ -15,6 +9,7 @@ commands = {
     'push_index': cmd_push_index,
     'pull': cmd_pull,
     'pull_index': cmd_pull_index,
+    'rm': cmd_rm,
 }
 
 def main():

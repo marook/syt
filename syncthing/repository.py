@@ -127,7 +127,19 @@ class RepositoryIndex(object):
         content_hash = wd_file.content_hash() if content_hash is None else content_hash
         with self._connect() as con:
             cur = con.cursor()
-            cur.execute('insert into tracked_files (path, content_hash, added_ts) values (?, ?, ?)', (wd_file.get_repository_path(self.repo), content_hash, now))
+            repo_path = wd_file.get_repository_path(self.repo)
+            cur.execute('insert into tracked_files (path, content_hash, added_ts) values (?, ?, ?)', (repo_path, content_hash, now))
+            con.commit()
+
+    def remove_file(self, wd_file):
+        now = current_time_milliseconds()
+        with self._connect() as con:
+            cur = con.cursor()
+            repo_path = wd_file.get_repository_path(self.repo)
+            cur.execute('select 1 from tracked_files where removed_ts is null and path = ?', (repo_path,))
+            if cur.fetchone() is None:
+                raise FileNotInRepository('{} can not be removed because not in repository'.format(wd_file.path))
+            cur.execute('update tracked_files set removed_ts = ? where path = ?', (now, repo_path))
             con.commit()
 
     def get_tracked_file(self, repo_path):
