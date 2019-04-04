@@ -5,7 +5,8 @@ syt - synchronize things
 3) Creating a local repository
 4) Synchronize with a remote repository
 5) Testing
-6) License
+6) Release
+7) License
 
 
 -----------------------------------------------------------------------
@@ -64,6 +65,13 @@ $ python3 -m unittest discover lib '*_spec.py'
 Run an integration test:
 $ cd test
 $ ./crud.spec.sh
+
+
+-----------------------------------------------------------------------
+Release
+
+Run the tests. Version bump in setup.py and commit version. Tag version
+in git.
 
 
 -----------------------------------------------------------------------
