@@ -8,7 +8,7 @@ from distutils.core import setup
 import os.path
 
 setup(name='syt',
-    version='0.1.0',
+    version='0.1.2',
     license='AGPLv3',
     description='a tool for synchronizing things over removable media',
     author='Markus Peröbner',
