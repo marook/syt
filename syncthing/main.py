@@ -1,4 +1,13 @@
-from syncthing import cmd_add, cmd_init, cmd_pull, cmd_pull_index, cmd_push, cmd_push_index, cmd_rm, cmd_status
+from syncthing import (
+        cmd_add,
+        cmd_init,
+        cmd_pull,
+        cmd_pull_index,
+        cmd_push,
+        cmd_push_index,
+        cmd_rm,
+        cmd_status,
+)
 import sys
 
 commands = {
