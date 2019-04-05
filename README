@@ -49,7 +49,7 @@ Synchronize with a remote repository
 Push all your files to a remote repository:
 $ syt push /path/to/remote/repo
 
-Push a singfe file by adding it's working directory path:
+Push a single file by adding it's working directory path:
 $ syt push /path/to/remote/repo my/file.webm
 
 Pull files from a remote repository:
