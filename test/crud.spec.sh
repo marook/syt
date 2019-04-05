@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-export syt=`realpath ../syt.py`
+export syt=`realpath syt.py`
 
 step(){
     echo ''
