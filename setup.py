@@ -4,7 +4,7 @@
 # syt
 # Copyright (C) 2019  Markus Peröbner
 #
-from distutils.core import setup
+from setuptools import setup
 import os.path
 
 setup(name='syt',
