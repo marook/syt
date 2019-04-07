@@ -10,7 +10,7 @@ def run(argv):
     transfer_limit = calculate_transfer_limit(remote_repo, args.limit_repo_content_size)
     file_filter = file_transfer.passthrough if args.exclude_repo_content is None else build_exclude_repo_content_filter(local_repo, args.exclude_repo_content)
     if len(args.file) == 0:
-        files = [f.repo_path for f in local_repo.index.added_files]
+        files = [f.path for f in local_repo.added_files]
     else:
         files = args.file
     file_transfer.transfer(local_repo, remote_repo, files, transfer_limit=transfer_limit, file_filter=file_filter)
@@ -32,11 +32,11 @@ class ExcludeExistingFilter(object):
     @property
     def existing_content_hashes(self):
         if self.existing_content_hashes_cache is None:
-            self.existing_content_hashes_cache = frozenset([f.content_hash for f in self.remote_index.added_files])
+            self.existing_content_hashes_cache = frozenset(self.remote_index.added_content_hashes)
         return self.existing_content_hashes_cache
 
-    def filter(self, file):
-        return not file.content_hash in self.existing_content_hashes
+    def filter(self, repo_file):
+        return not repo_file.index.content_hash in self.existing_content_hashes
 
 def parse_args(argv):
     p = argparse.ArgumentParser(prog='syt push', description='Pushes files into a remote repository')

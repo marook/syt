@@ -4,9 +4,9 @@ import syncthing.repository as repository
 def run(argv):
     args = parse_args(argv)
     repo = repository.find_repository()
-    for f in args.file:
-        wd_file = repository.get_file(f)
-        repo.index.add_file(wd_file)
+    for file_path in args.file:
+        repo_file = repo.get_file(file_path)
+        repo_file.add()
 
 def parse_args(argv):
     p = argparse.ArgumentParser(prog='syt add', description='Adds files to the repo')

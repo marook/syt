@@ -37,7 +37,7 @@ class Repository(object):
 
     @property
     def index(self):
-        return RepositoryIndex(self, self.meta_dir)
+        return RepositoryIndex(self.meta_dir)
 
     @property
     def repo_host(self):
@@ -54,25 +54,15 @@ class Repository(object):
         '''
         return '{}:{}'.format(self.repo_host, os.path.abspath(self.repo_root))
 
-    def find_tracked_file(self, path):
-        abs_path = self.resolve_tracked_path(path)
+    def get_file(self, path):
+        '''get_file returns a RepositoryFile for the given path.
+        '''
+        abs_path = os.path.abspath(path)
         if not abs_path.startswith(os.path.abspath(self.repo_root)):
             raise FileNotInRepository('{} not in repository {}'.format(path, self.repo_root))
         repo_path = abs_path[len(self.repo_root)+1:]
-        return self.index.get_tracked_file(repo_path)
-
-    def resolve_tracked_path(self, path):
-        for p in self.tracked_path_resolutions(path):
-            if os.path.exists(p):
-                return os.path.abspath(p)
-        raise FileNotInRepository('{} not found in repository'.format(path))
-
-    def tracked_path_resolutions(self, path):
-        if os.path.isabs(path):
-            yield path
-            return
-        yield os.path.join(self.repo_root, path)
-        yield os.path.abspath(path)
+        file_index = self.index.get_file(repo_path)
+        return RepositoryFile(self, repo_path, index=file_index)
 
     def get_remote_meta_dir(self, repo_name):
         colon_pos = repo_name.find(':')
@@ -88,17 +78,23 @@ class Repository(object):
     @property
     def file_content_size(self):
         size = 0
-        for f in self.index.added_files:
+        for f in self.added_files:
             size += f.size
         return size
 
+    @property
+    def added_files(self):
+        for repo_path in self.index.added_file_paths:
+            yield self.get_file(os.path.join(self.repo_root, repo_path))
+
     def get_remote_index(self, repo_name):
-        # TODO passing None as repo here is wrong but compiles for now :/
-        return RepositoryIndex(None, self.get_remote_meta_dir(repo_name))
+        return RepositoryIndex(self.get_remote_meta_dir(repo_name))
+
+class FileNotInRepository(Exception):
+    pass
 
 class RepositoryIndex(object):
-    def __init__(self, repo, meta_dir):
-        self.repo = repo
+    def __init__(self, meta_dir):
         self.meta_dir = meta_dir
 
     @property
@@ -114,47 +110,43 @@ class RepositoryIndex(object):
             cur.execute('create table schema_history (migration text primary key not null)')
             cur.execute('create table tracked_files (path text primary key not null, content_hash text not null, added_ts integer not null, removed_ts integer)')
 
-    @property
-    def added_files(self):
+    def get_file(self, repo_path):
         with self._connect() as con:
             cur = con.cursor()
-            cur.execute('select path, content_hash from tracked_files where removed_ts is null')
-            for repo_path, content_hash in cur.fetchall():
-                yield TrackedFile(self.repo, repo_path, content_hash)
-
-    def add_file(self, wd_file, content_hash=None):
-        now = current_time_milliseconds()
-        content_hash = wd_file.content_hash() if content_hash is None else content_hash
-        with self._connect() as con:
-            cur = con.cursor()
-            repo_path = wd_file.get_repository_path(self.repo)
-            cur.execute('insert into tracked_files (path, content_hash, added_ts) values (?, ?, ?)', (repo_path, content_hash, now))
-            con.commit()
-
-    def remove_file(self, wd_file):
-        now = current_time_milliseconds()
-        with self._connect() as con:
-            cur = con.cursor()
-            repo_path = wd_file.get_repository_path(self.repo)
-            cur.execute('select 1 from tracked_files where removed_ts is null and path = ?', (repo_path,))
-            if cur.fetchone() is None:
-                raise FileNotInRepository('{} can not be removed because not in repository'.format(wd_file.path))
-            cur.execute('update tracked_files set removed_ts = ? where path = ?', (now, repo_path))
-            con.commit()
-
-    def get_tracked_file(self, repo_path):
-        with self._connect() as con:
-            cur = con.cursor()
-            cur.execute('select content_hash from tracked_files where removed_ts is null and path = ?', (repo_path,))
+            cur.execute('select content_hash, added_ts, removed_ts from tracked_files where path = ?', (repo_path,))
             row = cur.fetchone()
             if row is None:
                 return None
-            (content_hash,) = row
-            return TrackedFile(self.repo, repo_path, content_hash)
+            (content_hash, added_ts, removed_ts) = row
+            return FileIndex(repo_path, content_hash, added_ts, removed_ts)
 
-def current_time_milliseconds():
-    # taken from https://stackoverflow.com/a/5998359/404522
-    return int(round(time.time() * 1000))
+    @property
+    def added_file_paths(self):
+        with self._connect() as con:
+            cur = con.cursor()
+            cur.execute('select path from tracked_files where removed_ts is null')
+            for repo_path, in cur.fetchall():
+                yield repo_path
+
+    @property
+    def added_content_hashes(self):
+        with self._connect() as con:
+            cur = con.cursor()
+            cur.execute('select content_hash from tracked_files where removed_ts is null')
+            for content_hash, in cur.fetchall():
+                yield content_hash
+
+    def insert_file(self, file_index):
+        with self._connect() as con:
+            cur = con.cursor()
+            cur.execute('insert into tracked_files (path, content_hash, added_ts, removed_ts) values (?, ?, ?, ?)', (file_index.path, file_index.content_hash, file_index.added_ts, file_index.removed_ts))
+            con.commit()
+
+    def update_removed_ts(self, repo_path, removed_ts):
+        with self._connect() as con:
+            cur = con.cursor()
+            cur.execute('update tracked_files set removed_ts = ? where path = ?', (removed_ts, repo_path))
+            con.commit()
 
 class RepositoryDb(object):
     def __init__(self, db_path):
@@ -170,11 +162,14 @@ class RepositoryDb(object):
             self.connection.close()
             self.connection = None
 
-class TrackedFile(object):
-    def __init__(self, repo, repo_path, content_hash):
+class RepositoryFile(object):
+    '''RepositoryFile represents a file within the repository.
+    '''
+
+    def __init__(self, repo, repo_path, index=None):
         self.repo = repo
         self.repo_path = repo_path
-        self.content_hash = content_hash
+        self.index = index
 
     @property
     def path(self):
@@ -184,27 +179,24 @@ class TrackedFile(object):
     def size(self):
         return os.stat(self.path).st_size
 
-def find_files(path):
-    for root, dirs, files in os.walk(path):
-        if root == path:
-            dirs.remove(repo_meta_dir)
-        for f in files:
-            yield get_file(os.path.join(root, f))
-
-def get_file(path):
-    apath = os.path.abspath(path)
-    return WdFile(apath)
-
-class WdFile(object):
-    def __init__(self, path):
-        self.path = path
-
-    def get_repository_path(self, repo):
-        '''get_repository_path returns the path of the file within the repository.'''
-        repo_root = repo.repo_root
-        if not self.path.startswith(repo_root):
-            raise FileNotInRepository('{} not in {}'.format(self.path, repo_root))
-        return self.path[len(repo_root)+1:]
+    def add(self):
+        '''add adds this file to the repository index.
+        '''
+        if not self.index is None:
+            raise ValueError('RepositoryFile has already an index')
+        now = current_time_milliseconds()
+        file_index = FileIndex(self.repo_path, self.content_hash(), now)
+        self.repo.index.insert_file(file_index)
+        self.index = file_index
+        
+    def remove(self):
+        '''remove removes this file from the repository index.
+        '''
+        if self.index is None:
+            raise ValueError('RepositoryFile has no index')
+        now = current_time_milliseconds()
+        self.repo.index.update_removed_ts(self.repo_path, now)
+        self.index.removed_ts = now
 
     def content_hash(self):
         h = hashlib.sha224()
@@ -216,9 +208,25 @@ class WdFile(object):
                 h.update(chunk)
         return h.hexdigest()
 
-    @property
-    def size(self):
-        return os.stat(self.path).st_size
+def current_time_milliseconds():
+    # taken from https://stackoverflow.com/a/5998359/404522
+    return int(round(time.time() * 1000))
 
-class FileNotInRepository(Exception):
-    pass
+class FileIndex(object):
+    '''FileIndex holds all values stored about a tracked file within the index.
+    '''
+
+    def __init__(self, path, content_hash, added_ts, removed_ts=None):
+        self.path = path
+        self.content_hash = content_hash
+        self.added_ts = added_ts
+        self.removed_ts = removed_ts
+
+def find_files(path):
+    '''find_files finds file paths which can be tracked.
+    '''
+    for root, dirs, files in os.walk(path):
+        if root == path:
+            dirs.remove(repo_meta_dir)
+        for f in files:
+            yield os.path.join(root, f)
