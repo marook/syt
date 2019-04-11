@@ -7,7 +7,8 @@
 from setuptools import setup
 import os.path
 
-setup(name='syt',
+setup(
+    name='syt',
     version='0.1.2',
     license='AGPLv3',
     description='a tool for synchronizing things over removable media',
@@ -18,7 +19,7 @@ setup(name='syt',
     ],
     entry_points={
         'console_scripts': [
-            'syt = syncthing:main',
+            'syt = syncthing.main:main',
         ],
     },
     data_files=[
