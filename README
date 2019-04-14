@@ -60,7 +60,7 @@ $ syt pull /path/to/remote/repo
 Testing
 
 Run the tests:
-$ python3 -m unittest discover syncthing '*_spec.py'
+$ python3 -m unittest discover syncthing -t . -p '*_spec.py'
 
 Run an integration test:
 $ ( cd test && ./crud.spec.sh )

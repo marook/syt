@@ -1,0 +1,82 @@
+Testing the code
+================
+
+We use a package layout.  Make sure not to put package directories into
+sys.path by accident.
+
+When running unittest as a module, it is better to use options (-o or --oo)
+instead of positional arguments to avoid mistakes.  Especially if you have to
+pass a pattern (-p, --pattern) to select tests.
+
+
+Do use
+------
+#--
+# (1) Running with __package__ = <package>, __name__ = <package>.<module>
+#     ("using as module")
+#
+#     This is the preferred way of testing.
+#--
+# setup.py: noisy
+python setup.py test
+python setup.py test -s syncthing
+python setup.py test -s syncthing.humansize_spec
+python setup.py test -s syncthing.humansize_spec.FormatSizeSpec
+
+# setup.py: quite
+python setup.py -q test
+python setup.py -q test -s syncthing
+python setup.py -q test -s syncthing.humansize_spec
+python setup.py -q test -s syncthing.humansize_spec.FormatSizeSpec
+
+# -m unittest discover
+python -m unittest discover -p '*_spec.py'
+python -m unittest discover -p '*_spec.py' -k human
+python -m unittest discover -p '*_spec.py' -t . -s syncthing -k ini
+
+# -m unittest <module[.class[.method]]>
+python -m unittest syncthing.humansize_spec
+python -m unittest syncthing.humansize_spec.FormatSizeSpec
+python -m unittest syncthing.humansize_spec.FormatSizeSpec.test_bytes
+
+
+#--
+# (2) Running with __package__ = <package>, __name__ = "__main__"
+#     ("running as module")
+#
+#     Good, but test module must handle this case explicitly.
+#--
+# -m pkg.module (__name__ will be __main__ in this case)
+python -m syncthing.humansize_spec
+
+
+#--
+# (3) Running with __package__ = None (or ''), __name__ = "__main__"
+#     ("running as script")
+#
+#     Can work, but test module must handle this case explicitly.
+#     Module must also take care of sys.path and __package__.
+#
+#     Benefits probably are good auto-completion and run wherever you are
+#     (directory wiese).  That makes it very convenient during development.
+#--
+# pkg/mod_spec.py
+# <this is currently not supported by any included test>
+
+
+Do _not_ use
+------------
+python -m unittest discover syncthing '*_spec.py'
+python -m unittest discover -s syncthing -p '*_spec.py'
+
+This may or may not work.  It is probably not what you intend to do.
+If you specify a starting directory, you have to pass a top directory as well.
+Otherwise, the package directory will be included in sys.path and you test the
+code in an environment for which it is not designed.  This can lead to name
+collisions and botches the tests.
+
+
+Find help
+---------
+python setup.py test -h
+python -m unittest -h
