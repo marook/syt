@@ -112,3 +112,13 @@ if [[ -e 'remote/world.txt' ]]
 then
     fail 'world.txt should no longer exist'
 fi
+
+step 'add files in directory'
+mkdir 'repo/recurse'
+echo 'recursive content' > 'repo/recurse/file.txt'
+( cd 'repo' && ${syt} add 'recurse' )
+( cd 'repo' && ${syt} push '../remote' )
+if [[ ! -e 'remote/recurse/file.txt' ]]
+then
+    fail 'file.txt should exist'
+fi
