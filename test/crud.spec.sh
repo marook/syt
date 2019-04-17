@@ -32,8 +32,11 @@ ${syt} init 'repo'
 step 'status'
 ( cd 'repo' && ${syt} status )
 
-step 'add'
+step 'status with not tracked file'
 echo 'hello world' > 'repo/world.txt'
+( cd 'repo' && ${syt} status )
+
+step 'add'
 ( cd 'repo' && ${syt} add 'world.txt' )
 
 step 'status'
