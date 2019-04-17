@@ -1,5 +1,3 @@
-* write all tracked_files with a removed_ts set to destination index on
-  push and pull
 * status command should not list added files which exist
 * add on directory should add all files recursive
 * add help message when calling syt without command and -h flag
