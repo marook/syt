@@ -1,5 +1,4 @@
 * add on directory should add all files recursive
-* add help message when calling syt without command and -h flag
 ----- v0.2.0 release
 * add windows support by always using / in repository db paths
 * verify command which checks if index content hash and actual files
