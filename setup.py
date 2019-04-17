@@ -9,7 +9,7 @@ import os.path
 
 setup(
     name='syt',
-    version='0.1.2',
+    version='0.2.0',
     license='AGPLv3',
     description='a tool for synchronizing things over removable media',
     author='Markus Peröbner',
