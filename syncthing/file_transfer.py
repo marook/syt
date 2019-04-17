@@ -6,10 +6,18 @@ def passthrough(*args, **kwargs):
     return True
 
 def transfer(src_repo, dst_repo, src_file_paths, transfer_limit=None, file_filter=passthrough):
-    for src_file_path in src_file_paths:
-        src_file = src_repo.get_file(src_file_path)
+    added_files, removed_files = lookup_files(src_repo, src_file_paths)
+    for src_file in removed_files:
+        dst_file_path = os.path.join(dst_repo.repo_root, src_file.repo_path)
+        dst_file = dst_repo.get_file(dst_file_path)
+        if os.path.exists(dst_file_path):
+            if not transfer_limit is None:
+                transfer_limit += dst_file.size
+            os.remove(dst_file_path)
+        dst_repo.index.replace_file(src_file.index)
+    for src_file in added_files:
         if src_file.index is None:
-            raise RepoFileNotFound('{} not found in repository'.format(src_file_path))
+            raise RepoFileNotFound('{} not found in repository'.format(src_file.path))
         if not file_filter(src_file):
             continue
         dst_file = dst_repo.get_file(os.path.join(dst_repo.repo_root, src_file.repo_path))
@@ -30,6 +38,17 @@ def transfer(src_repo, dst_repo, src_file_paths, transfer_limit=None, file_filte
         os.makedirs(os.path.dirname(dst_file_path), exist_ok=True)
         shutil.copyfile(src_file.path, dst_file_path)
         dst_repo.index.insert_file(src_file.index)
+
+def lookup_files(repo, file_paths):
+    added_files = []
+    removed_files = []
+    for fp in file_paths:
+        f = repo.get_file(fp)
+        if f.removed:
+            removed_files.append(f)
+        else:
+            added_files.append(f)
+    return added_files, removed_files
 
 class RepoFileNotFound(Exception):
     pass

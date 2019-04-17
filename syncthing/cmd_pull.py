@@ -1,17 +1,20 @@
 import argparse
-import os
-import syncthing.file_transfer as file_transfer
-import syncthing.repository as repository
+import os.path
+
+from syncthing import (
+    file_transfer,
+    repository,
+)
 
 def run(argv):
     args = parse_args(argv)
     local_repo = repository.find_repository()
     remote_repo = repository.open_repository(args.repository)
     if len(args.file) == 0:
-        files = [f.path for f in remote_repo.added_files]
-        file_transfer.transfer(remote_repo, local_repo, files)
+        files = [os.path.join(remote_repo.repo_root, tfp) for tfp in remote_repo.index.tracked_file_paths]
     else:
-        file_transfer.transfer(remote_repo, local_repo, [os.path.join(remote_repo.repo_root, f) for f in args.file])
+        files = args.file
+    file_transfer.transfer(remote_repo, local_repo, files)
 
 def parse_args(argv):
     p = argparse.ArgumentParser(prog='syt pull', description='Pulls files from a remote repository')

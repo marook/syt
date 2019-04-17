@@ -1,7 +1,11 @@
 import argparse
-import syncthing.file_transfer as file_transfer
-import syncthing.humansize as humansize
-import syncthing.repository as repository
+import os.path
+
+from syncthing import (
+    file_transfer,
+    humansize,
+    repository,
+)
 
 def run(argv):
     args = parse_args(argv)
@@ -10,7 +14,7 @@ def run(argv):
     transfer_limit = calculate_transfer_limit(remote_repo, args.limit_repo_content_size)
     file_filter = file_transfer.passthrough if args.exclude_repo_content is None else build_exclude_repo_content_filter(local_repo, args.exclude_repo_content)
     if len(args.file) == 0:
-        files = [f.path for f in local_repo.added_files]
+        files = [os.path.join(local_repo.repo_root, fp) for fp in local_repo.index.tracked_file_paths]
     else:
         files = args.file
     file_transfer.transfer(local_repo, remote_repo, files, transfer_limit=transfer_limit, file_filter=file_filter)

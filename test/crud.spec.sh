@@ -52,7 +52,11 @@ step 'status remote'
 step 'pull pull.txt from remote'
 echo 'something else' > 'remote/pull.txt'
 ( cd 'remote' && ${syt} add 'pull.txt' )
-( cd 'repo' && ${syt} pull '../remote' 'pull.txt' )
+( cd 'repo' && ${syt} pull '../remote' `realpath '../remote/pull.txt'` )
+if [[ ! -e 'repo/pull.txt' ]]
+then
+    fail "pull.txt should have been pulled from remote"
+fi
 
 step 'status'
 ( cd 'repo' && ${syt} status --content-size )
@@ -95,6 +99,13 @@ step 'pull index by name'
 step 'rm file'
 ( cd 'repo' && ${syt} rm 'world.txt' )
 if [[ -e 'repo/world.txt' ]]
+then
+    fail 'world.txt should no longer exist'
+fi
+
+step 'push removed file'
+( cd 'repo' && ${syt} push '../remote' )
+if [[ -e 'remote/world.txt' ]]
 then
     fail 'world.txt should no longer exist'
 fi

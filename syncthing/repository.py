@@ -84,6 +84,7 @@ class Repository(object):
 
     @property
     def added_files(self):
+        # TODO remove?
         for repo_path in self.index.added_file_paths:
             yield self.get_file(os.path.join(self.repo_root, repo_path))
 
@@ -121,7 +122,16 @@ class RepositoryIndex(object):
             return FileIndex(repo_path, content_hash, added_ts, removed_ts)
 
     @property
+    def tracked_file_paths(self):
+        with self._connect() as con:
+            cur = con.cursor()
+            cur.execute('select path from tracked_files')
+            for repo_path, in cur.fetchall():
+                yield repo_path
+
+    @property
     def added_file_paths(self):
+        # TODO remove?
         with self._connect() as con:
             cur = con.cursor()
             cur.execute('select path from tracked_files where removed_ts is null')
@@ -146,6 +156,13 @@ class RepositoryIndex(object):
         with self._connect() as con:
             cur = con.cursor()
             cur.execute('update tracked_files set removed_ts = ? where path = ?', (removed_ts, repo_path))
+            con.commit()
+
+    def replace_file(self, file_index):
+        with self._connect() as con:
+            cur = con.cursor()
+            cur.execute('delete from tracked_files where path = ?', (file_index.path, ))
+            cur.execute('insert into tracked_files (path, content_hash, added_ts, removed_ts) values (?, ?, ?, ?)', (file_index.path, file_index.content_hash, file_index.added_ts, file_index.removed_ts))
             con.commit()
 
 class RepositoryDb(object):
@@ -178,6 +195,10 @@ class RepositoryFile(object):
     @property
     def size(self):
         return os.stat(self.path).st_size
+
+    @property
+    def removed(self):
+        return not self.index is None and not self.index.removed_ts is None
 
     def add(self):
         '''add adds this file to the repository index.

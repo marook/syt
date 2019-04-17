@@ -1,4 +1,3 @@
-* delete files with a removed_ts set on push and pull
 * write all tracked_files with a removed_ts set to destination index on
   push and pull
 * status command should not list added files which exist
