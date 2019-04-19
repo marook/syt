@@ -1,7 +1,7 @@
 * add windows support by always using / in repository db paths
 * verify command which checks if index content hash and actual files
   match
+----- v0.3.0 release
 * add rm purge option to remove file and db entry
 * add a generation value which is incremented with each change
 * prevent overwriting pushed index when generation is higher
------ v0.3.0 release
