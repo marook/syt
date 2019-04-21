@@ -13,7 +13,7 @@ def run(argv):
             index_transfer.transfer(remote_repo, local_repo, index_name)
 
 def parse_args(argv):
-    p = argparse.ArgumentParser(prog='syt push_index', description='Pushes the index into a remote repository')
+    p = argparse.ArgumentParser(prog='syt pull_index', description='Pulls the index from a remote repository')
     p.add_argument('repository')
     p.add_argument('index', nargs='*')
     return p.parse_args(args=argv)
