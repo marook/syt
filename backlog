@@ -1,4 +1,3 @@
-* add windows support by always using / in repository db paths
 * verify command which checks if index content hash and actual files
   match
 ----- v0.3.0 release

@@ -56,13 +56,17 @@ class Repository(object):
 
     def get_file(self, path):
         '''get_file returns a RepositoryFile for the given path.
+
+        path may be a OS dependant path to a file within the repository
+        or a file key from the repository's DB.
         '''
         abs_path = os.path.abspath(path)
         if not abs_path.startswith(os.path.abspath(self.repo_root)):
             raise FileNotInRepository('{} not in repository {}'.format(path, self.repo_root))
         repo_path = abs_path[len(self.repo_root)+1:]
-        file_index = self.index.get_file(repo_path)
-        return RepositoryFile(self, repo_path, index=file_index)
+        repo_key = path_to_key(repo_path)
+        file_index = self.index.get_file(repo_key)
+        return RepositoryFile(self, repo_path, repo_key, index=file_index)
 
     def get_remote_meta_dir(self, repo_name):
         colon_pos = repo_name.find(':')
@@ -84,9 +88,8 @@ class Repository(object):
 
     @property
     def added_files(self):
-        # TODO remove?
-        for repo_path in self.index.added_file_paths:
-            yield self.get_file(os.path.join(self.repo_root, repo_path))
+        for repo_key in self.index.added_file_keys:
+            yield self.get_file(os.path.join(self.repo_root, repo_key))
 
     def get_remote_index(self, repo_name):
         return RepositoryIndex(self.get_remote_meta_dir(repo_name))
@@ -111,32 +114,31 @@ class RepositoryIndex(object):
             cur.execute('create table schema_history (migration text primary key not null)')
             cur.execute('create table tracked_files (path text primary key not null, content_hash text not null, added_ts integer not null, removed_ts integer)')
 
-    def get_file(self, repo_path):
+    def get_file(self, repo_key):
         with self._connect() as con:
             cur = con.cursor()
-            cur.execute('select content_hash, added_ts, removed_ts from tracked_files where path = ?', (repo_path,))
+            cur.execute('select content_hash, added_ts, removed_ts from tracked_files where path = ?', (repo_key,))
             row = cur.fetchone()
             if row is None:
                 return None
             (content_hash, added_ts, removed_ts) = row
-            return FileIndex(repo_path, content_hash, added_ts, removed_ts)
+            return FileIndex(repo_key, content_hash, added_ts, removed_ts)
 
     @property
     def tracked_file_paths(self):
         with self._connect() as con:
             cur = con.cursor()
             cur.execute('select path from tracked_files')
-            for repo_path, in cur.fetchall():
-                yield repo_path
+            for repo_key, in cur.fetchall():
+                yield repo_key
 
     @property
-    def added_file_paths(self):
-        # TODO remove?
+    def added_file_keys(self):
         with self._connect() as con:
             cur = con.cursor()
             cur.execute('select path from tracked_files where removed_ts is null')
-            for repo_path, in cur.fetchall():
-                yield repo_path
+            for repo_key, in cur.fetchall():
+                yield repo_key
 
     @property
     def added_content_hashes(self):
@@ -152,10 +154,10 @@ class RepositoryIndex(object):
             cur.execute('insert into tracked_files (path, content_hash, added_ts, removed_ts) values (?, ?, ?, ?)', (file_index.path, file_index.content_hash, file_index.added_ts, file_index.removed_ts))
             con.commit()
 
-    def update_removed_ts(self, repo_path, removed_ts):
+    def update_removed_ts(self, repo_key, removed_ts):
         with self._connect() as con:
             cur = con.cursor()
-            cur.execute('update tracked_files set removed_ts = ? where path = ?', (removed_ts, repo_path))
+            cur.execute('update tracked_files set removed_ts = ? where path = ?', (removed_ts, repo_key))
             con.commit()
 
     def replace_file(self, file_index):
@@ -179,13 +181,26 @@ class RepositoryDb(object):
             self.connection.close()
             self.connection = None
 
+def path_to_key(path):
+    '''path_to_key converts a file system path into a repository DB key.
+    '''
+    fragments = []
+    remaining_path = path
+    while True:
+        remaining_path, tail = os.path.split(remaining_path)
+        fragments.insert(0, tail)
+        if remaining_path == '':
+            break
+    return '/'.join(fragments)
+
 class RepositoryFile(object):
     '''RepositoryFile represents a file within the repository.
     '''
 
-    def __init__(self, repo, repo_path, index=None):
+    def __init__(self, repo, repo_path, repo_key, index=None):
         self.repo = repo
         self.repo_path = repo_path
+        self.repo_key = repo_key
         self.index = index
 
     @property
@@ -206,7 +221,7 @@ class RepositoryFile(object):
         if not self.index is None:
             raise ValueError('RepositoryFile has already an index')
         now = current_time_milliseconds()
-        file_index = FileIndex(self.repo_path, self.content_hash(), now)
+        file_index = FileIndex(self.repo_key, self.content_hash(), now)
         self.repo.index.insert_file(file_index)
         self.index = file_index
         
@@ -216,7 +231,7 @@ class RepositoryFile(object):
         if self.index is None:
             raise ValueError('RepositoryFile has no index')
         now = current_time_milliseconds()
-        self.repo.index.update_removed_ts(self.repo_path, now)
+        self.repo.index.update_removed_ts(self.repo_key, now)
         self.index.removed_ts = now
 
     def content_hash(self):
